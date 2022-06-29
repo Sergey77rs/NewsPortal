@@ -1,0 +1,60 @@
+    python manage.py shell 
+
+>>> from News.models import *
+    
+#1 Создание пользователей:
+    ivanov_user = User.objects.create_user(username = 'Иванов Иван Иванович')
+    petrov_user = User.objects.create_user(username = 'Петров Петр Петрович')
+
+#2 Создание объектов авторов:
+    ivanov = Author.objects.create(user = ivanov_user)
+    petrov = Author.objects.create(user = petrov_user)
+
+#3 Добавление категорий:
+    ctg_litrat = Category.objects.create(category = "Классическая литература")
+    ctg_fantast = Category.objects.create(category = "Фантастика")
+    ctg_istoriy = Category.objects.create(category = "Историческая литература")
+    ctg_sport = Category.objects.create(category = "Спорт")
+
+#4 Добавление статей и новости:
+    ivanov_artecle = Post.objects.create(author_post = ivanov, сhoice_post = 'AR', heading_post = 'Чудо под Москвой', text_post = 'Текст статьи')
+    petrov_artecle = Post.objects.create(author_post = petrov, сhoice_post = 'AR', heading_post = 'Принцы Кригсмарине', text_post = 'Некий текст')
+    ivanov_news = Post.objects.create(author_post = ivanov, сhoice_post = 'NW', heading_post = 'Новости спорта', text_post = 'Текст новости')
+
+#5 Присвоение категорий статьям и новости:
+    PostCategory.objects.create(post = ivanov_artecle, category = ctg_fantast)
+    PostCategory.objects.create(post = petrov_artecle, category = ctg_litrat)
+    PostCategory.objects.create(post = petrov_artecle, category = ctg_istoriy)
+    PostCategory.objects.create(post = ivanov_news, category = ctg_sport)
+
+#6 Создание комментариев:
+    comment1 = Comment.objects.create(post = ivanov_artecle, user = petrov_user, text_comment = "Неплохо написанно")
+    comment2 = Comment.objects.create(post = petrov_artecle, user = ivanov_user, text_comment = "Могло быть и лучше")
+    comment3 = Comment.objects.create(post = petrov_artecle, user = petrov_user, text_comment = "Спасибо автору")
+    comment4 = Comment.objects.create(post = ivanov_news, user = petrov_user, text_comment = "Отличная новость!")
+
+#7 Ставим лайки и дизлайки:
+    import random 
+    list_likes = [ivanov_artecle, petrov_artecle, ivanov_news, comment1, comment2, comment3, comment4]
+    for i in range(100):
+        random_obj = random.choice(list_likes)
+	if i % 2:
+	    random_obj.like()
+	else:
+	    random_obj.dislike()
+
+#8 Обновление рейтингов пользователей:
+    aut_rat1 = ivanov.update_rating()
+    aut_rat2 = petrov.update_rating()
+
+#9 Находим имя и рейтинг лучшего пользователя:
+    best_user = Author.objects.all().order_by('-user_rating')[0]
+    print("Лучший пользователь:", best_user.user.username)
+    print("Рейтинг:", best_user.user_rating)
+
+#10 Находим дату добавления, имя автора, рейтинг, заголовок и превью лучшей статьи, основываясь на лайках/дислайках:
+    Post.objects.all().order_by('-rating_post').values('date_post', 'author_post__user__username', 'rating_post', 'heading_post', 'id').first()
+    print("Лучшая статья:", Post.objects.get(pk=3).preview())
+
+#11 Находим все комментарии (дата, пользователь, рейтинг, текст) к этой статье:
+    Post.objects.filter(pk=3).values('comment__date_comment', 'comment__user__username', 'comment__rating_comment', 'comment__text_comment')
